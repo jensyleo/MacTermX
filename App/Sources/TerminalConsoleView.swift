@@ -3,10 +3,13 @@ import SwiftUI
 
 struct TerminalConsoleView: View {
     @StateObject var viewModel: ConnectionViewModel
+    @ObservedObject var profiles: ProfilesViewModel
     @State private var input = ""
     @State private var showingSettings = false
     @State private var viewMode: ConsoleViewMode = .text
     @State private var showingCaptureSavePanel = false
+    @State private var showingSaveProfileAlert = false
+    @State private var newProfileName = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -60,9 +63,35 @@ struct TerminalConsoleView: View {
         .navigationTitle(viewModel.device.name)
         .toolbar {
             ToolbarItem {
+                Button("Save as Profile…", systemImage: "square.and.arrow.down") {
+                    newProfileName = viewModel.device.name
+                    showingSaveProfileAlert = true
+                }
+            }
+            ToolbarItem {
                 Button("Settings", systemImage: "gearshape") {
                     showingSettings = true
                 }
+            }
+        }
+        .alert("Save Profile", isPresented: $showingSaveProfileAlert) {
+            TextField("Profile Name", text: $newProfileName)
+            Button("Save") {
+                let profile = SerialProfile(
+                    name: newProfileName,
+                    deviceMatch: .init(
+                        vendorId: viewModel.device.vendorId,
+                        productId: viewModel.device.productId,
+                        serialNumber: viewModel.device.serialNumber
+                    ),
+                    serial: viewModel.configuration
+                )
+                profiles.save(profile)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if viewModel.device.vendorId == nil {
+                Text("This device doesn't report a USB vendor/product ID, so this profile may not auto-match it again later.")
             }
         }
         .sheet(isPresented: $showingSettings) {

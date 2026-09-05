@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SerialConfiguration: Sendable, Equatable, Codable {
+public struct SerialConfiguration: Sendable, Equatable, Hashable, Codable {
     public enum Parity: String, Sendable, Codable { case none, even, odd }
     public enum FlowControl: String, Sendable, Codable { case none, rtsCts, xonXoff }
 

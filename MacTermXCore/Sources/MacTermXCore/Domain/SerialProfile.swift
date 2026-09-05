@@ -2,10 +2,10 @@ import Foundation
 
 /// A saved connection profile. Deliberately carries no secrets — device
 /// matching is by USB identity only, never by credential.
-public struct SerialProfile: Sendable, Equatable, Codable, Identifiable {
+public struct SerialProfile: Sendable, Equatable, Hashable, Codable, Identifiable {
     public static let currentSchemaVersion = 1
 
-    public struct DeviceMatch: Sendable, Equatable, Codable {
+    public struct DeviceMatch: Sendable, Equatable, Hashable, Codable {
         public var vendorId: String?
         public var productId: String?
         public var serialNumber: String?

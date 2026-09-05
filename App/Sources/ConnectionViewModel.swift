@@ -36,8 +36,11 @@ final class ConnectionViewModel: ObservableObject {
 
     var isCapturing: Bool { captureURL != nil }
 
-    init(device: SerialDevice) {
+    init(device: SerialDevice, initialConfiguration: SerialConfiguration? = nil) {
         self.device = device
+        if let initialConfiguration {
+            self.configuration = initialConfiguration
+        }
     }
 
     func connect() async {
