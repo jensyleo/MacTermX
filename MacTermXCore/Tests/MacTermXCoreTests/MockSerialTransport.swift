@@ -33,4 +33,8 @@ final class MockSerialTransport: SerialTransport, @unchecked Sendable {
     func simulateIncoming(_ data: Data) {
         continuation.yield(.data(data))
     }
+
+    func simulateError(_ message: String) {
+        continuation.yield(.error(message))
+    }
 }

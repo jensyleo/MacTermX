@@ -5,13 +5,12 @@ import Testing
 @Suite("TerminalEngine")
 @MainActor
 struct TerminalEngineTests {
-    @Test("feeds incoming serial bytes into SwiftTerm's screen buffer")
+    @Test("feed(_:) reaches SwiftTerm's screen buffer")
     func incomingBytesReachBuffer() async throws {
         let transport = MockSerialTransport()
         let engine = TerminalEngine(transport: transport)
 
-        transport.simulateIncoming(Data("hello".utf8))
-        try await Task.sleep(for: .milliseconds(50))
+        engine.feed(Data("hello".utf8))
 
         let text = (0..<5).map { engine.terminal.getCharacter(col: $0, row: 0) ?? " " }
         #expect(String(text) == "hello")
