@@ -33,12 +33,24 @@ struct SessionTabBarView: View {
     }
 
     private func tabButton(_ tab: SessionTab) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(tab.connectionViewModel.state == .connected ? Color.green : Color.gray.opacity(0.4))
-                .frame(width: 6, height: 6)
-            Text(tab.title)
-                .lineLimit(1)
+        let isConnected = tab.connectionViewModel.state == .connected
+        return HStack(spacing: 6) {
+            Button {
+                viewModel.activeTabID = tab.id
+            } label: {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(isConnected ? Color.green : Color.gray.opacity(0.4))
+                        .frame(width: 6, height: 6)
+                    Text(tab.title)
+                        .lineLimit(1)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("\(tab.title), \(isConnected ? "connected" : "disconnected")"))
+            .accessibilityHint(Text("Switches to this session tab"))
+            .accessibilityAddTraits(tab.id == viewModel.activeTabID ? [.isButton, .isSelected] : .isButton)
+
             Button {
                 if viewModel.closeNeedsConfirmation(tab) {
                     tabPendingClose = tab
@@ -50,6 +62,7 @@ struct SessionTabBarView: View {
                     .font(.caption2)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("Close \(tab.title)"))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -57,7 +70,5 @@ struct SessionTabBarView: View {
             RoundedRectangle(cornerRadius: 6)
                 .fill(tab.id == viewModel.activeTabID ? Color.accentColor.opacity(0.2) : Color.clear)
         )
-        .contentShape(Rectangle())
-        .onTapGesture { viewModel.activeTabID = tab.id }
     }
 }

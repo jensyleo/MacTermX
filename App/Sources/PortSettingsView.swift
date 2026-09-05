@@ -131,6 +131,8 @@ struct PortSettingsView: View {
                 .frame(width: 10, height: 10)
             Text(label)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("\(label) \(on ? "active" : "inactive")"))
     }
 }
 
