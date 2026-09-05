@@ -42,13 +42,24 @@ hardware**:
   session content by default).
 - A persistent "PRODUCTION" banner and multi-line-paste preview, both
   error-prevention aids from the original design doc.
+- XON/XOFF software flow control, implemented at the byte-stream level
+  (see `XonXoffFlowController`) — ORSSerialPort has no driver-level API
+  for it, but XON/XOFF is just two reserved bytes in the data itself, so
+  none was needed.
+- Spanish localization (`Localizable.xcstrings`) for the app's UI
+  strings, alongside English.
+- Basic accessibility pass: VoiceOver-visible session tabs (previously a
+  plain tap-gesture region) and spoken active/inactive state for the
+  CTS/DSR/DCD signal indicators.
 
-Known gaps: XON/XOFF software flow control isn't implemented
-(ORSSerialPort exposes no API for it), the app isn't localized (English
-only; the design doc calls for Spanish too), and accessibility/VoiceOver
-hasn't been audited. Terminal parsing currently runs on the main actor —
-fine for interactive use, unverified under sustained high-baud-rate
-throughput.
+Known remaining gaps: not every UI string is localized yet (a handful
+built from interpolation or a non-literal value at the `Text()` call
+site don't auto-localize — SwiftUI only localizes string *literals*);
+accessibility has had a pass but not a full audit; terminal parsing
+still runs synchronously on the main actor (only the *redraw* is
+batched to ~60 Hz — see `TerminalEngine.scheduleUpdate()`), unverified
+under sustained high-baud-rate throughput since there's been no real
+hardware to test against yet.
 
 ## Scope
 
