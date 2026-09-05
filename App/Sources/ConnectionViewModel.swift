@@ -22,6 +22,11 @@ final class ConnectionViewModel: ObservableObject {
     @Published var sendAsHex = false
     @Published private(set) var manualSignals = ModemSignals()
     @Published private(set) var captureURL: URL?
+    /// Freezes the displayed text/hex snapshot without stopping actual
+    /// reception underneath — SwiftTerm keeps parsing, `CaptureLogger`
+    /// keeps logging, only the view's refresh is held back. See RF-003's
+    /// "pausa visual sin detener la recepción."
+    @Published var isPaused = false
 
     let device: SerialDevice
     private(set) var coordinator: SessionCoordinator?
@@ -123,16 +128,26 @@ final class ConnectionViewModel: ObservableObject {
         captureURL = nil
     }
 
+    func setPaused(_ paused: Bool) {
+        isPaused = paused
+        if !paused {
+            refreshBuffer()
+            hexDump = HexDump.format(rawLog)
+        }
+    }
+
     private func handleRawIncoming(_ data: Data) {
         capture.append(data)
         rawLog.append(data)
         if rawLog.count > Self.maxRawLogBytes {
             rawLog.removeFirst(rawLog.count - Self.maxRawLogBytes)
         }
+        guard !isPaused else { return }
         hexDump = HexDump.format(rawLog)
     }
 
     private func refreshBuffer() {
+        guard !isPaused else { return }
         lines = coordinator?.terminal.snapshotLines() ?? []
     }
 }

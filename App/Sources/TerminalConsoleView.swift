@@ -15,6 +15,8 @@ struct TerminalConsoleView: View {
     @StateObject private var macrosViewModel: MacrosViewModel
     @State private var showingMacros = false
     @State private var pendingDangerousMacro: MacroCommand?
+    @State private var searchQuery = ""
+    @State private var showingSearch = false
 
     init(viewModel: ConnectionViewModel, profiles: ProfilesViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -24,15 +26,40 @@ struct TerminalConsoleView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("View", selection: $viewMode) {
-                Text("Text").tag(ConsoleViewMode.text)
-                Text("Hex").tag(ConsoleViewMode.hex)
+            HStack {
+                Picker("View", selection: $viewMode) {
+                    Text("Text").tag(ConsoleViewMode.text)
+                    Text("Hex").tag(ConsoleViewMode.hex)
+                }
+                .pickerStyle(.segmented)
+                Toggle("Pause", systemImage: viewModel.isPaused ? "play.fill" : "pause.fill", isOn: Binding(
+                    get: { viewModel.isPaused },
+                    set: { viewModel.setPaused($0) }
+                ))
+                .toggleStyle(.button)
+                .labelsHidden()
+                .help(viewModel.isPaused ? "Resume live updates" : "Pause the display without stopping reception")
+                Button("Find", systemImage: "magnifyingglass") { showingSearch.toggle() }
+                    .labelsHidden()
             }
-            .pickerStyle(.segmented)
             .padding(8)
 
+            if showingSearch {
+                HStack {
+                    TextField("Search buffer…", text: $searchQuery)
+                        .textFieldStyle(.roundedBorder)
+                    if !searchQuery.isEmpty {
+                        Text("\(matchCount) match\(matchCount == 1 ? "" : "es")")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+            }
+
             ScrollView {
-                Text(viewMode == .text ? viewModel.lines.joined(separator: "\n") : viewModel.hexDump)
+                Text(displayedText)
                     .font(.system(.body, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
@@ -177,6 +204,25 @@ struct TerminalConsoleView: View {
                 viewModel.startCapture(to: url)
             }
         }
+    }
+
+    private var rawDisplayText: String {
+        viewMode == .text ? viewModel.lines.joined(separator: "\n") : viewModel.hexDump
+    }
+
+    private var displayedText: String {
+        guard !searchQuery.isEmpty else { return rawDisplayText }
+        let matches = rawDisplayText.components(separatedBy: "\n").filter {
+            $0.localizedCaseInsensitiveContains(searchQuery)
+        }
+        return matches.isEmpty ? "(no matches)" : matches.joined(separator: "\n")
+    }
+
+    private var matchCount: Int {
+        guard !searchQuery.isEmpty else { return 0 }
+        return rawDisplayText.components(separatedBy: "\n").filter {
+            $0.localizedCaseInsensitiveContains(searchQuery)
+        }.count
     }
 
     @ViewBuilder
