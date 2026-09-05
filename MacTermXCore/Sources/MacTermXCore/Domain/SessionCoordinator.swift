@@ -15,6 +15,7 @@ public final class SessionCoordinator: ObservableObject {
     public let terminal: TerminalEngine
     private let transport: SerialTransport
     private var eventTask: Task<Void, Never>?
+    private var transferChannel: TransferByteChannel?
 
     /// Every received byte, before it reaches the VT100 parser — for a hex
     /// view or a capture/log file, which need the raw wire bytes rather
@@ -62,6 +63,27 @@ public final class SessionCoordinator: ObservableObject {
         try await transport.setSignals(signals)
     }
 
+    /// Switches incoming bytes away from the VT100 parser and into a
+    /// dedicated channel for a file transfer engine (XMODEM/YMODEM/ZMODEM)
+    /// to read from — the same "only one consumer of an event stream"
+    /// constraint `TerminalEngine`'s doc comment describes, just resolved
+    /// by mode instead of by a permanent owner. Also switches `state` to
+    /// `.transferring`, so the UI can't start a second transfer or an
+    /// accidental disconnect mid-transfer.
+    public func beginTransfer() -> TransferByteChannel {
+        let channel = TransferByteChannel()
+        transferChannel = channel
+        state = .transferring
+        return channel
+    }
+
+    /// Restores normal terminal operation after a transfer finishes,
+    /// succeeds or fails.
+    public func endTransfer() {
+        transferChannel = nil
+        if state == .transferring { state = .connected }
+    }
+
     private var isFailed: Bool {
         if case .failed = state { return true }
         return false
@@ -76,8 +98,12 @@ public final class SessionCoordinator: ObservableObject {
         case .error(let message):
             state = .failed(message)
         case .data(let data):
-            onRawIncomingData?(data)
-            terminal.feed(data)
+            if let transferChannel {
+                transferChannel.push(data)
+            } else {
+                onRawIncomingData?(data)
+                terminal.feed(data)
+            }
         case .signals(let cts, let dsr, let dcd, _):
             self.cts = cts
             self.dsr = dsr

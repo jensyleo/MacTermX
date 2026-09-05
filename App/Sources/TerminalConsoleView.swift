@@ -10,6 +10,8 @@ struct TerminalConsoleView: View {
     @State private var showingCaptureSavePanel = false
     @State private var showingSaveProfileAlert = false
     @State private var newProfileName = ""
+    @State private var showingTransfer = false
+    @StateObject private var fileTransfer = FileTransferViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -69,10 +71,22 @@ struct TerminalConsoleView: View {
                 }
             }
             ToolbarItem {
+                Button("Transfer Files…", systemImage: "arrow.up.arrow.down.circle") {
+                    if let coordinator = viewModel.coordinator {
+                        fileTransfer.attach(coordinator)
+                        showingTransfer = true
+                    }
+                }
+                .disabled(viewModel.state != .connected)
+            }
+            ToolbarItem {
                 Button("Settings", systemImage: "gearshape") {
                     showingSettings = true
                 }
             }
+        }
+        .sheet(isPresented: $showingTransfer) {
+            FileTransferView(viewModel: fileTransfer)
         }
         .alert("Save Profile", isPresented: $showingSaveProfileAlert) {
             TextField("Profile Name", text: $newProfileName)
