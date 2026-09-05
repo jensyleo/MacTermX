@@ -28,6 +28,29 @@ final class ProfilesViewModel: ObservableObject {
         reload()
     }
 
+    func duplicate(_ profile: SerialProfile) {
+        var copy = profile
+        copy.id = UUID()
+        copy.name = "\(profile.name) copy"
+        save(copy)
+    }
+
+    func export(_ profile: SerialProfile, to url: URL) throws {
+        try store.export(profile, to: url)
+    }
+
+    /// Imports a profile JSON file, always assigning it a fresh ID —
+    /// never overwriting an existing profile by trusting the file's own
+    /// ID, since it came from outside the app.
+    @discardableResult
+    func importProfile(from url: URL) throws -> SerialProfile {
+        let data = try Data(contentsOf: url)
+        var profile = try store.decode(data)
+        profile.id = UUID()
+        save(profile)
+        return profile
+    }
+
     /// Finds the live port this profile was captured from, matching by
     /// USB identity (never by path — a profile deliberately doesn't store
     /// one, since the same device can enumerate under a different
