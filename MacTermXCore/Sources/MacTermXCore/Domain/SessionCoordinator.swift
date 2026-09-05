@@ -1,10 +1,13 @@
+import Combine
 import Foundation
 
 /// One serial session: a profile, its transport, and the terminal engine
 /// feeding off it, tracked through a single explicit state machine.
+/// `ObservableObject`/`@Published` (not the newer `@Observable` macro) so
+/// this stays usable back to macOS 13.
 @MainActor
-public final class SessionCoordinator {
-    public private(set) var state: SessionState = .disconnected
+public final class SessionCoordinator: ObservableObject {
+    @Published public private(set) var state: SessionState = .disconnected
     public let profile: SerialProfile
     public let terminal: TerminalEngine
     private let transport: SerialTransport
@@ -14,6 +17,9 @@ public final class SessionCoordinator {
         self.profile = profile
         self.transport = transport
         self.terminal = TerminalEngine(transport: transport)
+        // `terminal.snapshotLines()` isn't itself Published — forward its
+        // updates as ordinary SwiftUI change notifications.
+        self.terminal.onUpdate = { [weak self] in self?.objectWillChange.send() }
     }
 
     public func connect() async {
@@ -38,6 +44,10 @@ public final class SessionCoordinator {
         eventTask?.cancel()
         eventTask = nil
         state = .disconnected
+    }
+
+    public func sendUserInput(_ data: Data) async throws {
+        try await terminal.sendUserInput(data)
     }
 
     private var isFailed: Bool {

@@ -35,7 +35,7 @@ public struct ModemSignals: Sendable, Equatable {
     }
 }
 
-public struct SerialDevice: Sendable, Equatable, Identifiable {
+public struct SerialDevice: Sendable, Equatable, Hashable, Identifiable {
     public var id: String { path }
     public var path: String
     public var name: String

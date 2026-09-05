@@ -19,6 +19,12 @@ public final class TerminalEngine {
     // only strong reference alive itself.
     private let delegate: Delegate
 
+    /// Called after every `feed(_:)`, so a view model can re-render its
+    /// snapshot of the buffer. Not a Combine publisher: `Terminal` isn't
+    /// `Sendable`/observable itself, so the simplest correct hook is a
+    /// plain callback fired on the same `@MainActor` this class runs on.
+    public var onUpdate: (() -> Void)?
+
     public init(transport: SerialTransport, options: TerminalOptions = .default) {
         self.transport = transport
         let delegate = Delegate()
@@ -29,6 +35,17 @@ public final class TerminalEngine {
 
     public func feed(_ data: Data) {
         terminal.feed(byteArray: [UInt8](data))
+        onUpdate?()
+    }
+
+    /// Renders the visible screen (not scrollback) as plain text lines,
+    /// for a simple SwiftUI text-based console. Drops SwiftTerm's styling
+    /// (color, bold, etc.) — MacTermX's own renderer can read those
+    /// attributes from `terminal` directly later if it needs them.
+    public func snapshotLines() -> [String] {
+        (0..<terminal.rows).map { row in
+            String((0..<terminal.cols).map { terminal.getCharacter(col: $0, row: row) ?? " " })
+        }
     }
 
     public func sendUserInput(_ data: Data) async throws {
