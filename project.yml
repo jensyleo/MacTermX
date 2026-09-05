@@ -1,0 +1,52 @@
+name: MacTermX
+options:
+  bundleIdPrefix: com.jensyleo
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    MACTERMX_COPYRIGHT: "© 2026 Jensy Leonardo Martínez Cruz."
+    # Ad-hoc signing ("Sign to Run Locally") — real ad-hoc, not linker-signed.
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    ENABLE_HARDENED_RUNTIME: NO
+    SWIFT_VERSION: "6.0"
+
+packages:
+  MacTermXCore:
+    path: MacTermXCore
+
+targets:
+  MacTermX:
+    type: application
+    platform: macOS
+    sources:
+      - App/Sources
+      - path: App/Resources
+        buildPhase: resources
+        excludes:
+          - Info.plist
+    dependencies:
+      - package: MacTermXCore
+        product: MacTermXCore
+    info:
+      path: App/Resources/Info.plist
+      properties:
+        CFBundleName: MacTermX
+        CFBundleDisplayName: MacTermX
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSHumanReadableCopyright: $(MACTERMX_COPYRIGHT)
+        LSMinimumSystemVersion: "13.0"
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMultipleInstancesProhibited: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jensyleo.mactermx
+        PRODUCT_NAME: MacTermX
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_APP_SANDBOX: NO
