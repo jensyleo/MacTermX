@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var tab: SidebarTab = .ports
     @State private var portSelection: SerialDevice?
     @State private var profileSelection: SerialProfile?
+    @State private var showingDiagnosticsExport = false
 
     var body: some View {
         NavigationSplitView {
@@ -44,6 +45,19 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 760, minHeight: 480)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button("Export Diagnostics…", systemImage: "stethoscope") {
+                    showingDiagnosticsExport = true
+                }
+            }
+        }
+        .fileExporter(
+            isPresented: $showingDiagnosticsExport,
+            document: TextFileDocument(text: diagnosticReportText),
+            contentType: .plainText,
+            defaultFilename: "MacTermX-diagnostics.txt"
+        ) { _ in }
         .onChange(of: portSelection) { device in
             guard let device else { return }
             sessionTabs.openPort(device)
@@ -70,6 +84,22 @@ struct ContentView: View {
         } else {
             placeholder("No Open Sessions", "terminal", "Choose a serial port or profile on the left to open a session. Each opens in its own tab.")
         }
+    }
+
+    private var diagnosticReportText: String {
+        let bundle = Bundle.main
+        let activeSession: (deviceName: String, configuration: SerialConfiguration, state: String)?
+        if let tab = sessionTabs.activeTab {
+            activeSession = (tab.title, tab.connectionViewModel.configuration, "\(tab.connectionViewModel.state)")
+        } else {
+            activeSession = nil
+        }
+        return DiagnosticReport.generate(
+            appVersion: bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+            buildNumber: bundle.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
+            activeSession: activeSession,
+            lastError: sessionTabs.activeTab?.connectionViewModel.lastError
+        )
     }
 
     private func placeholder(_ title: String, _ systemImage: String, _ message: String) -> some View {
