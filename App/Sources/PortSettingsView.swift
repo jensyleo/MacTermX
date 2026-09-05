@@ -7,6 +7,7 @@ import SwiftUI
 /// off), and live CTS/DSR/DCD signal indicators.
 struct PortSettingsView: View {
     @Binding var configuration: SerialConfiguration
+    @Binding var environment: SerialProfile.Environment
     @Binding var lineEnding: LineEnding
     @Binding var localEcho: Bool
     var liveSignals: (cts: Bool, dsr: Bool, dcd: Bool)?
@@ -85,6 +86,19 @@ struct PortSettingsView: View {
                     Text("Signals are only reported while connected.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Environment") {
+                Picker("Environment", selection: $environment) {
+                    Text("Lab").tag(SerialProfile.Environment.lab)
+                    Text("Production").tag(SerialProfile.Environment.production)
+                }
+                .pickerStyle(.segmented)
+                if environment == .production {
+                    Text("A persistent PRODUCTION banner will show in the console — this is a labeling aid only, not an access control.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
 

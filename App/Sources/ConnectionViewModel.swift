@@ -17,6 +17,7 @@ final class ConnectionViewModel: ObservableObject {
     @Published private(set) var dsr = false
     @Published private(set) var dcd = false
     @Published var configuration = SerialConfiguration()
+    @Published var environment: SerialProfile.Environment = .lab
     @Published var lineEnding: LineEnding = .crlf
     @Published var localEcho = false
     @Published var sendAsHex = false
@@ -41,17 +42,18 @@ final class ConnectionViewModel: ObservableObject {
 
     var isCapturing: Bool { captureURL != nil }
 
-    init(device: SerialDevice, initialConfiguration: SerialConfiguration? = nil) {
+    init(device: SerialDevice, initialConfiguration: SerialConfiguration? = nil, initialEnvironment: SerialProfile.Environment = .lab) {
         self.device = device
         if let initialConfiguration {
             self.configuration = initialConfiguration
         }
+        self.environment = initialEnvironment
     }
 
     func connect() async {
         do {
             let transport = try ORSSerialTransport(devicePath: device.path)
-            let profile = SerialProfile(name: device.name, serial: configuration)
+            let profile = SerialProfile(name: device.name, environment: environment, serial: configuration)
             let coordinator = SessionCoordinator(profile: profile, transport: transport)
             coordinator.terminal.onUpdate = { [weak self] in self?.refreshBuffer() }
             coordinator.onRawIncomingData = { [weak self] in self?.handleRawIncoming($0) }

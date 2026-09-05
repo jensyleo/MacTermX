@@ -29,7 +29,7 @@ final class SessionTabsViewModel: ObservableObject {
 
     func openProfile(_ profile: SerialProfile, device: SerialDevice) {
         activate(key: device.path, title: profile.name) {
-            ConnectionViewModel(device: device, initialConfiguration: profile.serial)
+            ConnectionViewModel(device: device, initialConfiguration: profile.serial, initialEnvironment: profile.environment)
         }
     }
 

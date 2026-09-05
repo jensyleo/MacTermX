@@ -17,6 +17,7 @@ struct TerminalConsoleView: View {
     @State private var pendingDangerousMacro: MacroCommand?
     @State private var searchQuery = ""
     @State private var showingSearch = false
+    @State private var pendingMultilineSend: String?
 
     init(viewModel: ConnectionViewModel, profiles: ProfilesViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -26,6 +27,15 @@ struct TerminalConsoleView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if viewModel.environment == .production {
+                Text("PRODUCTION")
+                    .font(.caption.bold())
+                    .frame(maxWidth: .infinity)
+                    .padding(4)
+                    .background(Color.red)
+                    .foregroundStyle(.white)
+            }
+
             HStack {
                 Picker("View", selection: $viewMode) {
                     Text("Text").tag(ConsoleViewMode.text)
@@ -146,6 +156,14 @@ struct TerminalConsoleView: View {
         .sheet(isPresented: $showingMacros) {
             MacrosView(viewModel: macrosViewModel)
         }
+        .sheet(isPresented: Binding(
+            get: { pendingMultilineSend != nil },
+            set: { if !$0 { pendingMultilineSend = nil } }
+        )) {
+            if let text = pendingMultilineSend {
+                multilinePreview(text)
+            }
+        }
         .alert(
             "Send \"\(pendingDangerousMacro?.name ?? "")\"?",
             isPresented: Binding(
@@ -168,6 +186,7 @@ struct TerminalConsoleView: View {
             Button("Save") {
                 let profile = SerialProfile(
                     name: newProfileName,
+                    environment: viewModel.environment,
                     deviceMatch: .init(
                         vendorId: viewModel.device.vendorId,
                         productId: viewModel.device.productId,
@@ -186,6 +205,7 @@ struct TerminalConsoleView: View {
         .sheet(isPresented: $showingSettings) {
             PortSettingsView(
                 configuration: $viewModel.configuration,
+                environment: $viewModel.environment,
                 lineEnding: $viewModel.lineEnding,
                 localEcho: $viewModel.localEcho,
                 liveSignals: viewModel.liveSignals,
@@ -295,7 +315,41 @@ struct TerminalConsoleView: View {
         guard !input.isEmpty else { return }
         let text = input
         input = ""
-        Task { await viewModel.send(text) }
+        if text.contains("\n") {
+            pendingMultilineSend = text
+        } else {
+            Task { await viewModel.send(text) }
+        }
+    }
+
+    private func multilinePreview(_ text: String) -> some View {
+        let lineCount = text.components(separatedBy: "\n").count
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Send \(lineCount) lines?")
+                .font(.headline)
+            Text("This looks like a multi-line paste. Each line will be sent as typed — review it before it goes to the device.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ScrollView {
+                Text(text)
+                    .font(.system(.caption, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 240)
+            .padding(6)
+            .background(Color.black.opacity(0.05))
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) { pendingMultilineSend = nil }
+                Button("Send") {
+                    pendingMultilineSend = nil
+                    Task { await viewModel.send(text) }
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+        .frame(width: 420)
     }
 
     private func trigger(_ macro: MacroCommand) {
