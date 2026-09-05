@@ -28,11 +28,11 @@ public final class ORSSerialTransport: NSObject, SerialTransport, @unchecked Sen
         port.numberOfStopBits = UInt(configuration.stopBits)
         port.parity = configuration.parity.orsParity
         port.usesRTSCTSFlowControl = configuration.flowControl == .rtsCts
-        // ORSSerialPort has no XON/XOFF (software) flow control API — it
-        // only exposes RTS/CTS and DTR/DSR hardware flow control. Selecting
-        // .xonXoff is accepted but currently behaves like .none; a real
-        // implementation would need to inject/strip XON/XOFF bytes at the
-        // termios level, which this library doesn't provide a hook for.
+        // ORSSerialPort only exposes RTS/CTS and DTR/DSR *hardware* flow
+        // control — there's no .xonXoff equivalent here because XON/XOFF
+        // isn't a driver-level feature to begin with; it's two reserved
+        // bytes (0x11/0x13) traveling in the data stream. That's handled
+        // one layer up, in `SessionCoordinator`, via `XonXoffFlowController`.
         port.delegate = self
         port.open()
         observeSignals(port)

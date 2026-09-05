@@ -54,9 +54,9 @@ struct PortSettingsView: View {
                     Text("XON/XOFF (software)").tag(SerialConfiguration.FlowControl.xonXoff)
                 }
                 if configuration.flowControl == .xonXoff {
-                    Text("Not yet implemented — ORSSerialPort exposes no software flow control API. Selecting this currently behaves like None.")
+                    Text("Implemented at the byte-stream level: MacTermX pauses sending when the device sends XOFF (0x13) and resumes on XON (0x11); both bytes are stripped from the console/capture. It doesn't touch the RTS/DTR lines — that's what RTS/CTS above is for.")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.secondary)
                 }
 
                 if configuration.flowControl != .rtsCts {

@@ -16,6 +16,13 @@ public final class SessionCoordinator: ObservableObject {
     private let transport: SerialTransport
     private var eventTask: Task<Void, Never>?
     private var transferChannel: TransferByteChannel?
+    /// Only active when the profile requests software flow control — see
+    /// `XonXoffFlowController`'s doc comment for why this needs no
+    /// termios/driver support. Not applied during a file transfer:
+    /// XMODEM/YMODEM/ZMODEM have their own ACK/NAK-based flow control,
+    /// and 0x11/0x13 are ordinary bytes that can legitimately appear in a
+    /// binary payload — stripping them would corrupt the transfer.
+    private let xonXoff: XonXoffFlowController?
 
     /// Every received byte, before it reaches the VT100 parser — for a hex
     /// view or a capture/log file, which need the raw wire bytes rather
@@ -25,6 +32,7 @@ public final class SessionCoordinator: ObservableObject {
     public init(profile: SerialProfile, transport: SerialTransport) {
         self.profile = profile
         self.transport = transport
+        self.xonXoff = profile.serial.flowControl == .xonXoff ? XonXoffFlowController() : nil
         self.terminal = TerminalEngine(transport: transport)
         // `terminal.snapshotLines()` isn't itself Published — forward its
         // updates as ordinary SwiftUI change notifications.
@@ -56,6 +64,9 @@ public final class SessionCoordinator: ObservableObject {
     }
 
     public func sendUserInput(_ data: Data) async throws {
+        if let xonXoff {
+            await xonXoff.waitUntilClearToSend()
+        }
         try await terminal.sendUserInput(data)
     }
 
@@ -100,6 +111,10 @@ public final class SessionCoordinator: ObservableObject {
         case .data(let data):
             if let transferChannel {
                 transferChannel.push(data)
+            } else if let xonXoff {
+                let cleaned = await xonXoff.filterIncoming(data)
+                onRawIncomingData?(cleaned)
+                terminal.feed(cleaned)
             } else {
                 onRawIncomingData?(data)
                 terminal.feed(data)
