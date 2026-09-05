@@ -11,11 +11,18 @@ public enum XModemEngine {
 
     public struct Options: Sendable {
         public var useCRC: Bool
+        public var use1K: Bool
         public var maxRetries: Int
         public var blockTimeout: Duration
 
-        public init(useCRC: Bool = true, maxRetries: Int = XModemEngine.maxRetries, blockTimeout: Duration = XModemEngine.blockTimeout) {
+        public init(
+            useCRC: Bool = true,
+            use1K: Bool = false,
+            maxRetries: Int = XModemEngine.maxRetries,
+            blockTimeout: Duration = XModemEngine.blockTimeout
+        ) {
             self.useCRC = useCRC
+            self.use1K = use1K
             self.maxRetries = maxRetries
             self.blockTimeout = blockTimeout
         }
@@ -31,12 +38,13 @@ public enum XModemEngine {
         write: @escaping @Sendable ([UInt8]) async throws -> Void
     ) async throws {
         let useCRC = try await waitForStart(channel: channel, timeout: options.blockTimeout)
+        let size = options.use1K ? XModemFraming.blockSize1K : XModemFraming.blockSize
         var blockNumber: UInt8 = 1
         var offset = payload.startIndex
 
         while offset < payload.endIndex {
-            let end = payload.index(offset, offsetBy: XModemFraming.blockSize, limitedBy: payload.endIndex) ?? payload.endIndex
-            let block = XModemFraming.makeBlock(number: blockNumber, payload: Array(payload[offset..<end]), useCRC: useCRC)
+            let end = payload.index(offset, offsetBy: size, limitedBy: payload.endIndex) ?? payload.endIndex
+            let block = XModemFraming.makeBlock(number: blockNumber, payload: Array(payload[offset..<end]), useCRC: useCRC, size: size)
             try await sendBlockWithRetries(block, options: options, channel: channel, write: write)
             blockNumber = blockNumber &+ 1
             offset = end
@@ -85,11 +93,11 @@ public enum XModemEngine {
             if header == XModemFraming.Control.can {
                 throw TransferError.peerCancelled
             }
-            guard header == XModemFraming.Control.soh else { continue }
+            guard let size = XModemFraming.blockSize(forHeader: header) else { continue }
 
             let trailerSize = useCRC ? 2 : 1
             var frame: [UInt8] = [header]
-            for _ in 0..<(2 + XModemFraming.blockSize + trailerSize) {
+            for _ in 0..<(2 + size + trailerSize) {
                 frame.append(try await channel.readByte(timeout: options.blockTimeout))
             }
 

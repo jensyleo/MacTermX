@@ -44,6 +44,20 @@ struct XModemEngineTests {
         #expect(result.prefix(payload.count) == payload)
     }
 
+    @Test("transfers a payload spanning multiple 1024-byte (XMODEM-1K) blocks")
+    func transfersPayload1K() async throws {
+        let (senderChannel, senderWrite, receiverChannel, receiverWrite) = makeLoopback()
+        let payload = Data((0..<2500).map { UInt8($0 % 256) }) // spans 3 blocks of 1024
+
+        async let sent: Void = XModemEngine.send(payload, options: .init(use1K: true), channel: senderChannel, write: senderWrite)
+        async let received = XModemEngine.receive(options: .init(use1K: true), channel: receiverChannel, write: receiverWrite)
+
+        _ = try await sent
+        let result = try await received
+
+        #expect(result.prefix(payload.count) == payload)
+    }
+
     @Test("a single-block payload shorter than 128 bytes round-trips")
     func shortPayload() async throws {
         let (senderChannel, senderWrite, receiverChannel, receiverWrite) = makeLoopback()
