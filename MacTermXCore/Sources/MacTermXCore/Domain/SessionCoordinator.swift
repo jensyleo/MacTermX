@@ -8,6 +8,9 @@ import Foundation
 @MainActor
 public final class SessionCoordinator: ObservableObject {
     @Published public private(set) var state: SessionState = .disconnected
+    @Published public private(set) var cts = false
+    @Published public private(set) var dsr = false
+    @Published public private(set) var dcd = false
     public let profile: SerialProfile
     public let terminal: TerminalEngine
     private let transport: SerialTransport
@@ -50,6 +53,10 @@ public final class SessionCoordinator: ObservableObject {
         try await terminal.sendUserInput(data)
     }
 
+    public func setSignals(_ signals: ModemSignals) async throws {
+        try await transport.setSignals(signals)
+    }
+
     private var isFailed: Bool {
         if case .failed = state { return true }
         return false
@@ -65,8 +72,10 @@ public final class SessionCoordinator: ObservableObject {
             state = .failed(message)
         case .data(let data):
             terminal.feed(data)
-        case .signals:
-            break
+        case .signals(let cts, let dsr, let dcd, _):
+            self.cts = cts
+            self.dsr = dsr
+            self.dcd = dcd
         }
     }
 }

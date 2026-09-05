@@ -4,8 +4,7 @@ import SwiftUI
 struct TerminalConsoleView: View {
     @StateObject var viewModel: ConnectionViewModel
     @State private var input = ""
-    @State private var appendCRLF = true
-    @State private var baudRate = 115_200
+    @State private var showingSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,8 +24,6 @@ struct TerminalConsoleView: View {
                 TextField("Send text or command…", text: $input)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(send)
-                Toggle("CRLF", isOn: $appendCRLF)
-                    .toggleStyle(.checkbox)
                 Button("Send", action: send)
                     .disabled(viewModel.state != .connected)
             }
@@ -36,6 +33,7 @@ struct TerminalConsoleView: View {
 
             HStack {
                 statusLabel
+                signalIndicators
                 Spacer()
                 if let error = viewModel.lastError {
                     Text(error)
@@ -43,17 +41,48 @@ struct TerminalConsoleView: View {
                         .foregroundStyle(.red)
                 }
                 Spacer()
-                Picker("Baud", selection: $baudRate) {
-                    ForEach([9600, 19200, 38400, 57600, 115_200], id: \.self) { rate in
-                        Text("\(rate)").tag(rate)
-                    }
-                }
-                .frame(width: 140)
                 connectButton
             }
             .padding(8)
         }
         .navigationTitle(viewModel.device.name)
+        .toolbar {
+            ToolbarItem {
+                Button("Settings", systemImage: "gearshape") {
+                    showingSettings = true
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            PortSettingsView(
+                configuration: $viewModel.configuration,
+                lineEnding: $viewModel.lineEnding,
+                localEcho: $viewModel.localEcho,
+                liveSignals: viewModel.liveSignals,
+                manualSignals: viewModel.manualSignals,
+                onManualSignalsChange: { viewModel.setManualSignals($0) },
+                isConnected: viewModel.state == .connected
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var signalIndicators: some View {
+        if let signals = viewModel.liveSignals {
+            HStack(spacing: 6) {
+                signalDot("CTS", on: signals.cts)
+                signalDot("DSR", on: signals.dsr)
+                signalDot("DCD", on: signals.dcd)
+            }
+            .padding(.leading, 8)
+        }
+    }
+
+    private func signalDot(_ label: String, on: Bool) -> some View {
+        HStack(spacing: 2) {
+            Circle().fill(on ? Color.green : Color.gray.opacity(0.3)).frame(width: 6, height: 6)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder
@@ -85,7 +114,7 @@ struct TerminalConsoleView: View {
         if viewModel.state == .connected || viewModel.state == .opening {
             Button("Disconnect") { Task { await viewModel.disconnect() } }
         } else {
-            Button("Connect") { Task { await viewModel.connect(baudRate: baudRate) } }
+            Button("Connect") { Task { await viewModel.connect() } }
         }
     }
 
@@ -93,6 +122,6 @@ struct TerminalConsoleView: View {
         guard !input.isEmpty else { return }
         let text = input
         input = ""
-        Task { await viewModel.send(text, appendCRLF: appendCRLF) }
+        Task { await viewModel.send(text) }
     }
 }

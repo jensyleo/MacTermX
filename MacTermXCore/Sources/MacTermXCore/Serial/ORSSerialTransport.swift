@@ -1,11 +1,12 @@
 import Foundation
-import ORSSerial
+@preconcurrency import ORSSerial
 
 /// `SerialTransport` backed by ORSSerialPort.
 public final class ORSSerialTransport: NSObject, SerialTransport, @unchecked Sendable {
     private var port: ORSSerialPort?
     private let continuation: AsyncStream<SerialEvent>.Continuation
     public let events: AsyncStream<SerialEvent>
+    private var signalObservations: [NSKeyValueObservation] = []
 
     public init(devicePath: String) throws {
         guard let port = ORSSerialPort(path: devicePath) else {
@@ -27,8 +28,26 @@ public final class ORSSerialTransport: NSObject, SerialTransport, @unchecked Sen
         port.numberOfStopBits = UInt(configuration.stopBits)
         port.parity = configuration.parity.orsParity
         port.usesRTSCTSFlowControl = configuration.flowControl == .rtsCts
+        // ORSSerialPort has no XON/XOFF (software) flow control API — it
+        // only exposes RTS/CTS and DTR/DSR hardware flow control. Selecting
+        // .xonXoff is accepted but currently behaves like .none; a real
+        // implementation would need to inject/strip XON/XOFF bytes at the
+        // termios level, which this library doesn't provide a hook for.
         port.delegate = self
         port.open()
+        observeSignals(port)
+    }
+
+    private func observeSignals(_ port: ORSSerialPort) {
+        let continuation = self.continuation
+        let handler: (ORSSerialPort, NSKeyValueObservedChange<Bool>) -> Void = { port, _ in
+            continuation.yield(.signals(cts: port.cts, dsr: port.dsr, dcd: port.dcd, ri: false))
+        }
+        signalObservations = [
+            port.observe(\.cts, changeHandler: handler),
+            port.observe(\.dsr, changeHandler: handler),
+            port.observe(\.dcd, changeHandler: handler),
+        ]
     }
 
     public func write(_ data: Data) async throws {
