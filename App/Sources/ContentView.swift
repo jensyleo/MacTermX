@@ -10,6 +10,7 @@ private enum SidebarTab: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @StateObject private var portList = PortListViewModel()
     @StateObject private var profiles = ProfilesViewModel()
+    @StateObject private var sessionTabs = SessionTabsViewModel()
     @State private var tab: SidebarTab = .ports
     @State private var portSelection: SerialDevice?
     @State private var profileSelection: SerialProfile?
@@ -34,39 +35,40 @@ struct ContentView: View {
             .navigationTitle("MacTermX")
             .frame(minWidth: 220)
         } detail: {
-            detailView
+            VStack(spacing: 0) {
+                if !sessionTabs.tabs.isEmpty {
+                    SessionTabBarView(viewModel: sessionTabs)
+                    Divider()
+                }
+                detailView
+            }
         }
         .frame(minWidth: 760, minHeight: 480)
+        .onChange(of: portSelection) { device in
+            guard let device else { return }
+            sessionTabs.openPort(device)
+        }
+        .onChange(of: profileSelection) { profile in
+            guard let profile else { return }
+            if let device = profiles.matchingDevice(for: profile, in: portList.ports) {
+                sessionTabs.openProfile(profile, device: device)
+            }
+        }
     }
 
     @ViewBuilder
     private var detailView: some View {
-        switch tab {
-        case .ports:
-            if let portSelection {
-                TerminalConsoleView(viewModel: ConnectionViewModel(device: portSelection), profiles: profiles)
-                    .id(portSelection.id)
-            } else {
-                placeholder("Select a Port", "terminal", "Choose a serial port on the left to open a session.")
-            }
-        case .profiles:
-            if let profileSelection {
-                if let device = profiles.matchingDevice(for: profileSelection, in: portList.ports) {
-                    TerminalConsoleView(
-                        viewModel: ConnectionViewModel(device: device, initialConfiguration: profileSelection.serial),
-                        profiles: profiles
-                    )
-                    .id(profileSelection.id)
-                } else {
-                    placeholder(
-                        "Device Not Connected",
-                        "cable.connector.slash",
-                        "Plug in \"\(profileSelection.name)\" to open this profile. It's matched by USB vendor/product ID, not by port path."
-                    )
-                }
-            } else {
-                placeholder("Select a Profile", "tray.full", "Choose a saved profile on the left to reconnect.")
-            }
+        if let active = sessionTabs.activeTab {
+            TerminalConsoleView(viewModel: active.connectionViewModel, profiles: profiles)
+                .id(active.id)
+        } else if tab == .profiles, let profileSelection, profiles.matchingDevice(for: profileSelection, in: portList.ports) == nil {
+            placeholder(
+                "Device Not Connected",
+                "cable.connector.slash",
+                "Plug in \"\(profileSelection.name)\" to open this profile. It's matched by USB vendor/product ID, not by port path."
+            )
+        } else {
+            placeholder("No Open Sessions", "terminal", "Choose a serial port or profile on the left to open a session. Each opens in its own tab.")
         }
     }
 
