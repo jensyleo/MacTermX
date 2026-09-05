@@ -19,11 +19,22 @@ public final class TerminalEngine {
     // only strong reference alive itself.
     private let delegate: Delegate
 
-    /// Called after every `feed(_:)`, so a view model can re-render its
+    /// Called after `feed(_:)`, so a view model can re-render its
     /// snapshot of the buffer. Not a Combine publisher: `Terminal` isn't
     /// `Sendable`/observable itself, so the simplest correct hook is a
     /// plain callback fired on the same `@MainActor` this class runs on.
+    ///
+    /// Coalesced to roughly 60 Hz rather than fired once per `feed(_:)`
+    /// call: `snapshotLines()` is O(rows×cols), and a fast/bursty serial
+    /// device can call `feed(_:)` far more often than the console could
+    /// ever usefully redraw — see RNF-003's "renderizado por lotes para
+    /// evitar una actualización de UI por byte." Parsing itself (SwiftTerm's
+    /// `Terminal.feed`) still runs synchronously on the main actor every
+    /// time; only the expensive *redraw* is batched. A genuinely
+    /// background-threaded parser would need SwiftTerm's `Terminal` to be
+    /// safe to drive off-main, which it doesn't document as being.
     public var onUpdate: (() -> Void)?
+    private var updateScheduled = false
 
     public init(transport: SerialTransport, options: TerminalOptions = .default) {
         self.transport = transport
@@ -35,7 +46,18 @@ public final class TerminalEngine {
 
     public func feed(_ data: Data) {
         terminal.feed(byteArray: [UInt8](data))
-        onUpdate?()
+        scheduleUpdate()
+    }
+
+    private func scheduleUpdate() {
+        guard !updateScheduled else { return }
+        updateScheduled = true
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(16))
+            guard let self else { return }
+            self.updateScheduled = false
+            self.onUpdate?()
+        }
     }
 
     /// Renders the visible screen (not scrollback) as plain text lines,
