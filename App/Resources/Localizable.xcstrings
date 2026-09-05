@@ -1,0 +1,386 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Add" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar" } }
+      }
+    },
+    "A file transfer is in progress on this tab. Closing it now will abort the transfer." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hay una transferencia de archivo en curso en esta pestaña. Cerrarla ahora la interrumpirá." } }
+      }
+    },
+    "A persistent PRODUCTION banner will show in the console — this is a labeling aid only, not an access control." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se mostrará un aviso persistente de PRODUCCIÓN en la consola — es solo una ayuda visual, no un control de acceso." } }
+      }
+    },
+    "Baud Rate" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Velocidad (baudios)" } }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } }
+      }
+    },
+    "Capture to File…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Capturar a archivo…" } }
+      }
+    },
+    "Close and Abort Transfer" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar e interrumpir transferencia" } }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar" } }
+      }
+    },
+    "Closing…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrando…" } }
+      }
+    },
+    "Connect a USB-to-serial adapter to see it here." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conecta un adaptador USB-serie para verlo aquí." } }
+      }
+    },
+    "Connect first to control DTR/RTS manually." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conéctate primero para controlar DTR/RTS manualmente." } }
+      }
+    },
+    "Connect to a port and save its settings as a profile." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conéctate a un puerto y guarda su configuración como perfil." } }
+      }
+    },
+    "Connect" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectar" } }
+      }
+    },
+    "Connected" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectado" } }
+      }
+    },
+    "Connecting…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectando…" } }
+      }
+    },
+    "Data Bits" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bits de datos" } }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } }
+      }
+    },
+    "Disconnect" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desconectar" } }
+      }
+    },
+    "Disconnected" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desconectado" } }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Listo" } }
+      }
+    },
+    "Duplicate" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Duplicar" } }
+      }
+    },
+    "Environment" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Entorno" } }
+      }
+    },
+    "Even" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Par" } }
+      }
+    },
+    "Export Diagnostics…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Exportar diagnóstico…" } }
+      }
+    },
+    "Export…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Exportar…" } }
+      }
+    },
+    "Find" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar" } }
+      }
+    },
+    "Flow Control" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Control de flujo" } }
+      }
+    },
+    "Hex" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hex" } }
+      }
+    },
+    "Idle" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inactivo" } }
+      }
+    },
+    "Implemented at the byte-stream level: MacTermX pauses sending when the device sends XOFF (0x13) and resumes on XON (0x11); both bytes are stripped from the console/capture. It doesn't touch the RTS/DTR lines — that's what RTS/CTS above is for." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Implementado a nivel de flujo de bytes: MacTermX pausa el envío cuando el dispositivo manda XOFF (0x13) y reanuda con XON (0x11); ambos bytes se eliminan de la consola/captura. No toca las líneas RTS/DTR — para eso está RTS/CTS arriba." } }
+      }
+    },
+    "Import Profile…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importar perfil…" } }
+      }
+    },
+    "Lab" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Laboratorio" } }
+      }
+    },
+    "Line Ending on Send" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fin de línea al enviar" } }
+      }
+    },
+    "Line Ending" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fin de línea" } }
+      }
+    },
+    "Local Echo" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eco local" } }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre" } }
+      }
+    },
+    "No Saved Profiles" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin perfiles guardados" } }
+      }
+    },
+    "No Serial Ports" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin puertos seriales" } }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ninguno" } }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aceptar" } }
+      }
+    },
+    "Odd" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Impar" } }
+      }
+    },
+    "PRODUCTION" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "PRODUCCIÓN" } }
+      }
+    },
+    "Parity" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Paridad" } }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pausar" } }
+      }
+    },
+    "Ports" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Puertos" } }
+      }
+    },
+    "Profiles" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Perfiles" } }
+      }
+    },
+    "Production" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Producción" } }
+      }
+    },
+    "Profile Name" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nombre del perfil" } }
+      }
+    },
+    "Protocol" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Protocolo" } }
+      }
+    },
+    "Quick Commands" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comandos rápidos" } }
+      }
+    },
+    "Quick Commands…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comandos rápidos…" } }
+      }
+    },
+    "RTS/CTS (hardware)" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "RTS/CTS (hardware)" } }
+      }
+    },
+    "Receive File…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recibir archivo…" } }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar" } }
+      }
+    },
+    "Requires confirmation before sending" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Requiere confirmación antes de enviar" } }
+      }
+    },
+    "Save as Profile…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar como perfil…" } }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar" } }
+      }
+    },
+    "Search buffer…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar en el buffer…" } }
+      }
+    },
+    "Send File…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Enviar archivo…" } }
+      }
+    },
+    "Send" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Enviar" } }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ajustes" } }
+      }
+    },
+    "Signals are only reported while connected." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las señales solo se reportan mientras está conectado." } }
+      }
+    },
+    "Stop Bits" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bits de parada" } }
+      }
+    },
+    "Stop Capture" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener captura" } }
+      }
+    },
+    "Template" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Plantilla" } }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Texto" } }
+      }
+    },
+    "This command is marked as requiring confirmation before it's sent to the device." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este comando está marcado para requerir confirmación antes de enviarse al dispositivo." } }
+      }
+    },
+    "This device doesn't report a USB vendor/product ID, so this profile may not auto-match it again later." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este dispositivo no reporta un ID de fabricante/producto USB, así que este perfil podría no volver a coincidir automáticamente más adelante." } }
+      }
+    },
+    "This looks like a multi-line paste. Each line will be sent as typed — review it before it goes to the device." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esto parece un pegado de varias líneas. Cada línea se enviará tal cual — revísala antes de que vaya al dispositivo." } }
+      }
+    },
+    "Transfer Files…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Transferir archivos…" } }
+      }
+    },
+    "Transferring…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Transfiriendo…" } }
+      }
+    },
+    "Variables: {date}, {time}, {profile}" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Variables: {date}, {time}, {profile}" } }
+      }
+    },
+    "View" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vista" } }
+      }
+    },
+    "Waiting for sender…" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando al emisor…" } }
+      }
+    },
+    "XON/XOFF (software)" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "XON/XOFF (software)" } }
+      }
+    },
+    "ZMODEM here is a simplified stop-and-wait implementation — reliable, but not the real protocol's streaming/resume behavior. Verified only against a synthetic loopback, not real hardware/lrzsz yet." : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Este ZMODEM es una implementación simplificada de parada-y-espera — confiable, pero no el streaming/reanudación del protocolo real. Solo verificado contra un loopback sintético, aún no contra hardware real ni lrzsz." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

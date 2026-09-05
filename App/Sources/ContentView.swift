@@ -20,7 +20,8 @@ struct ContentView: View {
         NavigationSplitView {
             VStack(spacing: 0) {
                 Picker("", selection: $tab) {
-                    ForEach(SidebarTab.allCases) { Text($0.rawValue).tag($0) }
+                    Text("Ports").tag(SidebarTab.ports)
+                    Text("Profiles").tag(SidebarTab.profiles)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
