@@ -63,4 +63,7 @@ management.
 
 ## License
 
-Pending — to be decided after a dependency license audit.
+GPL-3.0 (see `LICENSE`). Two dependencies are MIT-licensed
+(ORSSerialPort, SwiftTerm) — see `NOTICE.md` for why no GPL alternative
+exists for either today, and the documented plan for revisiting that if
+the situation changes.

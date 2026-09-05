@@ -9,7 +9,7 @@ settings:
   base:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    MACTERMX_COPYRIGHT: "© 2026 Jensy Leonardo Martínez Cruz."
+    MACTERMX_COPYRIGHT: "© 2026 Jensy Leonardo Martínez Cruz. GPLv3."
     # Ad-hoc signing ("Sign to Run Locally") — real ad-hoc, not linker-signed.
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
