@@ -2,9 +2,15 @@ import Combine
 import Foundation
 import MacTermXCore
 
+enum ConsoleViewMode: String, CaseIterable, Identifiable {
+    case text, hex
+    var id: String { rawValue }
+}
+
 @MainActor
 final class ConnectionViewModel: ObservableObject {
     @Published private(set) var lines: [String] = []
+    @Published private(set) var hexDump = ""
     @Published private(set) var lastError: String?
     @Published private(set) var state: SessionState = .disconnected
     @Published private(set) var cts = false
@@ -13,15 +19,22 @@ final class ConnectionViewModel: ObservableObject {
     @Published var configuration = SerialConfiguration()
     @Published var lineEnding: LineEnding = .crlf
     @Published var localEcho = false
+    @Published var sendAsHex = false
     @Published private(set) var manualSignals = ModemSignals()
+    @Published private(set) var captureURL: URL?
 
     let device: SerialDevice
     private(set) var coordinator: SessionCoordinator?
     private var subscriptions: Set<AnyCancellable> = []
+    private let capture = CaptureLogger()
+    private var rawLog = Data()
+    private static let maxRawLogBytes = 1 << 20 // 1 MiB of scrollback for the hex view
 
     var liveSignals: (cts: Bool, dsr: Bool, dcd: Bool)? {
         state == .connected ? (cts, dsr, dcd) : nil
     }
+
+    var isCapturing: Bool { captureURL != nil }
 
     init(device: SerialDevice) {
         self.device = device
@@ -33,6 +46,7 @@ final class ConnectionViewModel: ObservableObject {
             let profile = SerialProfile(name: device.name, serial: configuration)
             let coordinator = SessionCoordinator(profile: profile, transport: transport)
             coordinator.terminal.onUpdate = { [weak self] in self?.refreshBuffer() }
+            coordinator.onRawIncomingData = { [weak self] in self?.handleRawIncoming($0) }
             subscriptions.removeAll()
             coordinator.$state.sink { [weak self] in self?.state = $0 }.store(in: &subscriptions)
             coordinator.$cts.sink { [weak self] in self?.cts = $0 }.store(in: &subscriptions)
@@ -51,12 +65,21 @@ final class ConnectionViewModel: ObservableObject {
 
     func send(_ text: String) async {
         guard let coordinator else { return }
-        let payload = text + lineEnding.bytes
+        let payload: Data
+        if sendAsHex {
+            guard let bytes = HexDump.parse(text) else {
+                lastError = "Invalid hex — use pairs of hex digits, e.g. \"41 0D 0A\"."
+                return
+            }
+            payload = bytes
+        } else {
+            payload = Data((text + lineEnding.bytes).utf8)
+        }
         if localEcho {
-            coordinator.terminal.feed(Data(payload.utf8))
+            coordinator.terminal.feed(payload)
         }
         do {
-            try await coordinator.sendUserInput(Data(payload.utf8))
+            try await coordinator.sendUserInput(payload)
         } catch {
             lastError = String(describing: error)
         }
@@ -72,6 +95,29 @@ final class ConnectionViewModel: ObservableObject {
                 lastError = String(describing: error)
             }
         }
+    }
+
+    func startCapture(to url: URL) {
+        do {
+            try capture.start(to: url)
+            captureURL = url
+        } catch {
+            lastError = String(describing: error)
+        }
+    }
+
+    func stopCapture() {
+        capture.stop()
+        captureURL = nil
+    }
+
+    private func handleRawIncoming(_ data: Data) {
+        capture.append(data)
+        rawLog.append(data)
+        if rawLog.count > Self.maxRawLogBytes {
+            rawLog.removeFirst(rawLog.count - Self.maxRawLogBytes)
+        }
+        hexDump = HexDump.format(rawLog)
     }
 
     private func refreshBuffer() {

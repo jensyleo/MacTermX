@@ -16,6 +16,11 @@ public final class SessionCoordinator: ObservableObject {
     private let transport: SerialTransport
     private var eventTask: Task<Void, Never>?
 
+    /// Every received byte, before it reaches the VT100 parser — for a hex
+    /// view or a capture/log file, which need the raw wire bytes rather
+    /// than SwiftTerm's interpreted screen buffer.
+    public var onRawIncomingData: ((Data) -> Void)?
+
     public init(profile: SerialProfile, transport: SerialTransport) {
         self.profile = profile
         self.transport = transport
@@ -71,6 +76,7 @@ public final class SessionCoordinator: ObservableObject {
         case .error(let message):
             state = .failed(message)
         case .data(let data):
+            onRawIncomingData?(data)
             terminal.feed(data)
         case .signals(let cts, let dsr, let dcd, _):
             self.cts = cts

@@ -5,11 +5,20 @@ struct TerminalConsoleView: View {
     @StateObject var viewModel: ConnectionViewModel
     @State private var input = ""
     @State private var showingSettings = false
+    @State private var viewMode: ConsoleViewMode = .text
+    @State private var showingCaptureSavePanel = false
 
     var body: some View {
         VStack(spacing: 0) {
+            Picker("View", selection: $viewMode) {
+                Text("Text").tag(ConsoleViewMode.text)
+                Text("Hex").tag(ConsoleViewMode.hex)
+            }
+            .pickerStyle(.segmented)
+            .padding(8)
+
             ScrollView {
-                Text(viewModel.lines.joined(separator: "\n"))
+                Text(viewMode == .text ? viewModel.lines.joined(separator: "\n") : viewModel.hexDump)
                     .font(.system(.body, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
@@ -21,9 +30,11 @@ struct TerminalConsoleView: View {
             Divider()
 
             HStack {
-                TextField("Send text or command…", text: $input)
+                TextField(viewModel.sendAsHex ? "Send hex, e.g. 41 0D 0A…" : "Send text or command…", text: $input)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(send)
+                Toggle("Hex", isOn: $viewModel.sendAsHex)
+                    .toggleStyle(.checkbox)
                 Button("Send", action: send)
                     .disabled(viewModel.state != .connected)
             }
@@ -41,6 +52,7 @@ struct TerminalConsoleView: View {
                         .foregroundStyle(.red)
                 }
                 Spacer()
+                captureButton
                 connectButton
             }
             .padding(8)
@@ -63,6 +75,16 @@ struct TerminalConsoleView: View {
                 onManualSignalsChange: { viewModel.setManualSignals($0) },
                 isConnected: viewModel.state == .connected
             )
+        }
+        .fileExporter(
+            isPresented: $showingCaptureSavePanel,
+            document: CaptureFilePlaceholder(),
+            contentType: .plainText,
+            defaultFilename: "\(viewModel.device.name)-capture.txt"
+        ) { result in
+            if case .success(let url) = result {
+                viewModel.startCapture(to: url)
+            }
         }
     }
 
@@ -106,6 +128,20 @@ struct TerminalConsoleView: View {
         case .failed(let message):
             Label("Failed: \(message)", systemImage: "exclamationmark.circle.fill")
                 .foregroundStyle(.red)
+        }
+    }
+
+    @ViewBuilder
+    private var captureButton: some View {
+        if viewModel.isCapturing {
+            Button("Stop Capture", systemImage: "record.circle.fill") {
+                viewModel.stopCapture()
+            }
+            .foregroundStyle(.red)
+        } else {
+            Button("Capture to File…", systemImage: "record.circle") {
+                showingCaptureSavePanel = true
+            }
         }
     }
 
