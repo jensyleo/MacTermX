@@ -67,7 +67,6 @@ final class ConnectionViewModel: ObservableObject {
     }
 
     func send(_ text: String) async {
-        guard let coordinator else { return }
         let payload: Data
         if sendAsHex {
             guard let bytes = HexDump.parse(text) else {
@@ -78,6 +77,16 @@ final class ConnectionViewModel: ObservableObject {
         } else {
             payload = Data((text + lineEnding.bytes).utf8)
         }
+        await sendRaw(payload)
+    }
+
+    func sendMacro(_ macro: MacroCommand) async {
+        let expanded = MacroExpander.expand(macro, profileName: device.name)
+        await sendRaw(Data(expanded.utf8))
+    }
+
+    private func sendRaw(_ payload: Data) async {
+        guard let coordinator else { return }
         if localEcho {
             coordinator.terminal.feed(payload)
         }

@@ -12,6 +12,15 @@ struct TerminalConsoleView: View {
     @State private var newProfileName = ""
     @State private var showingTransfer = false
     @StateObject private var fileTransfer = FileTransferViewModel()
+    @StateObject private var macrosViewModel: MacrosViewModel
+    @State private var showingMacros = false
+    @State private var pendingDangerousMacro: MacroCommand?
+
+    init(viewModel: ConnectionViewModel, profiles: ProfilesViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        self.profiles = profiles
+        _macrosViewModel = StateObject(wrappedValue: MacrosViewModel(deviceKey: viewModel.device.path))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,6 +40,20 @@ struct TerminalConsoleView: View {
             }
             .background(Color.black)
             .foregroundStyle(.green)
+
+            if !macrosViewModel.macros.isEmpty {
+                Divider()
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(macrosViewModel.macros) { macro in
+                            Button(macro.name) { trigger(macro) }
+                                .disabled(viewModel.state != .connected)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                }
+                .frame(height: 32)
+            }
 
             Divider()
 
@@ -80,6 +103,11 @@ struct TerminalConsoleView: View {
                 .disabled(viewModel.state != .connected)
             }
             ToolbarItem {
+                Button("Quick Commands…", systemImage: "bolt") {
+                    showingMacros = true
+                }
+            }
+            ToolbarItem {
                 Button("Settings", systemImage: "gearshape") {
                     showingSettings = true
                 }
@@ -87,6 +115,26 @@ struct TerminalConsoleView: View {
         }
         .sheet(isPresented: $showingTransfer) {
             FileTransferView(viewModel: fileTransfer)
+        }
+        .sheet(isPresented: $showingMacros) {
+            MacrosView(viewModel: macrosViewModel)
+        }
+        .alert(
+            "Send \"\(pendingDangerousMacro?.name ?? "")\"?",
+            isPresented: Binding(
+                get: { pendingDangerousMacro != nil },
+                set: { if !$0 { pendingDangerousMacro = nil } }
+            )
+        ) {
+            Button("Send", role: .destructive) {
+                if let macro = pendingDangerousMacro {
+                    Task { await viewModel.sendMacro(macro) }
+                }
+                pendingDangerousMacro = nil
+            }
+            Button("Cancel", role: .cancel) { pendingDangerousMacro = nil }
+        } message: {
+            Text("This command is marked as requiring confirmation before it's sent to the device.")
         }
         .alert("Save Profile", isPresented: $showingSaveProfileAlert) {
             TextField("Profile Name", text: $newProfileName)
@@ -202,5 +250,13 @@ struct TerminalConsoleView: View {
         let text = input
         input = ""
         Task { await viewModel.send(text) }
+    }
+
+    private func trigger(_ macro: MacroCommand) {
+        if macro.isDangerous {
+            pendingDangerousMacro = macro
+        } else {
+            Task { await viewModel.sendMacro(macro) }
+        }
     }
 }
