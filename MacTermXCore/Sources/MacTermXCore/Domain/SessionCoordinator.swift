@@ -33,17 +33,26 @@ public final class SessionCoordinator: ObservableObject {
     /// parser sees.
     public var onRawIncomingData: ((Data) -> Void)?
 
+    /// - Parameters:
+    ///   - termName: The terminal type to report, e.g. `"xterm-256color"`,
+    ///     `"vt100"`, or `"ansi"`. Passed straight to SwiftTerm without
+    ///     the app layer needing to import SwiftTerm itself.
+    ///   - scrollback: Scrollback buffer size in lines.
     public init(
         profile: SerialProfile,
         transport: SerialTransport,
-        terminalOptions: TerminalOptions = .default,
+        termName: String = "xterm-256color",
+        scrollback: Int = 500,
         encoding: TextEncodingKind = .utf8
     ) {
         self.profile = profile
         self.transport = transport
         self.encoding = encoding
         self.xonXoff = profile.serial.flowControl == .xonXoff ? XonXoffFlowController() : nil
-        self.terminal = TerminalEngine(transport: transport, options: terminalOptions)
+        var options = TerminalOptions.default
+        options.termName = termName
+        options.scrollback = scrollback
+        self.terminal = TerminalEngine(transport: transport, options: options)
         // `terminal.snapshotLines()` isn't itself Published — forward its
         // updates as ordinary SwiftUI change notifications.
         self.terminal.onUpdate = { [weak self] in self?.objectWillChange.send() }

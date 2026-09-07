@@ -44,12 +44,15 @@ public enum YModemEngine {
         onFileStart: @escaping @Sendable (String, Int) -> Void = { _, _ in }
     ) async throws -> [FilePayload] {
         var files: [FilePayload] = []
+        var totalBytes = 0
         while let (name, size) = try await receiveHeaderBlock(options: options, channel: channel, write: write) {
             onFileStart(name, size)
             var data = try await XModemEngine.receive(options: options, channel: channel, write: write)
             if size > 0, size < data.count {
                 data = data.prefix(size)
             }
+            totalBytes += data.count
+            guard totalBytes <= TransferLimits.maxReceiveBytes else { throw TransferError.payloadTooLarge }
             files.append(FilePayload(name: name, data: data))
         }
         return files

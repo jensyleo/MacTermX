@@ -45,7 +45,7 @@ final class FileTransferViewModel: ObservableObject {
     func sendFile(at url: URL, protocolKind: TransferProtocolKind) {
         guard let coordinator, !isBusy else { return }
         phase = .sending(fileName: url.lastPathComponent)
-        task = Task {
+        task = Task { [weak self] in
             let channel = coordinator.beginTransfer()
             defer { coordinator.endTransfer() }
             let write: @Sendable (Data) async throws -> Void = { [weak coordinator] data in
@@ -55,23 +55,24 @@ final class FileTransferViewModel: ObservableObject {
                 guard let data = try? Data(contentsOf: url) else {
                     throw CocoaError(.fileReadUnknown)
                 }
+                guard let self else { return }
                 switch protocolKind {
                 case .xmodemChecksum:
-                    try await XModemEngine.send(data, options: .init(useCRC: false), channel: channel, write: xmodemWrite(write))
+                    try await XModemEngine.send(data, options: .init(useCRC: false), channel: channel, write: self.xmodemWrite(write))
                 case .xmodemCRC:
-                    try await XModemEngine.send(data, channel: channel, write: xmodemWrite(write))
+                    try await XModemEngine.send(data, channel: channel, write: self.xmodemWrite(write))
                 case .xmodem1K:
-                    try await XModemEngine.send(data, options: .init(use1K: true), channel: channel, write: xmodemWrite(write))
+                    try await XModemEngine.send(data, options: .init(use1K: true), channel: channel, write: self.xmodemWrite(write))
                 case .ymodem:
-                    try await YModemEngine.send([.init(name: url.lastPathComponent, data: data)], channel: channel, write: xmodemWrite(write))
+                    try await YModemEngine.send([.init(name: url.lastPathComponent, data: data)], channel: channel, write: self.xmodemWrite(write))
                 case .zmodem:
-                    try await ZModemEngine.send(name: url.lastPathComponent, data: data, channel: channel, write: xmodemWrite(write))
+                    try await ZModemEngine.send(name: url.lastPathComponent, data: data, channel: channel, write: self.xmodemWrite(write))
                 }
-                phase = .succeeded("Sent \(url.lastPathComponent) (\(data.count) bytes)")
+                self.phase = .succeeded("Sent \(url.lastPathComponent) (\(data.count) bytes)")
             } catch is CancellationError {
-                phase = .failed("Cancelled")
+                self?.phase = .failed("Cancelled")
             } catch {
-                phase = .failed(String(describing: error))
+                self?.phase = .failed(String(describing: error))
             }
         }
     }
@@ -79,35 +80,36 @@ final class FileTransferViewModel: ObservableObject {
     func receiveFile(protocolKind: TransferProtocolKind, to directory: URL) {
         guard let coordinator, !isBusy else { return }
         phase = .receiving
-        task = Task {
+        task = Task { [weak self] in
             let channel = coordinator.beginTransfer()
             defer { coordinator.endTransfer() }
             let write: @Sendable (Data) async throws -> Void = { [weak coordinator] data in
                 try await coordinator?.sendUserInput(data)
             }
             do {
+                guard let self else { return }
                 switch protocolKind {
                 case .xmodemChecksum, .xmodemCRC, .xmodem1K:
-                    let data = try await XModemEngine.receive(channel: channel, write: xmodemWrite(write))
+                    let data = try await XModemEngine.receive(channel: channel, write: self.xmodemWrite(write))
                     let url = directory.appendingPathComponent("received-\(Int(Date().timeIntervalSince1970)).bin")
                     try data.write(to: url)
-                    phase = .succeeded("Received \(data.count) bytes → \(url.lastPathComponent)")
+                    self.phase = .succeeded("Received \(data.count) bytes → \(url.lastPathComponent)")
                 case .ymodem:
-                    let files = try await YModemEngine.receive(channel: channel, write: xmodemWrite(write))
+                    let files = try await YModemEngine.receive(channel: channel, write: self.xmodemWrite(write))
                     for file in files {
                         try file.data.write(to: directory.appendingPathComponent(file.name))
                     }
-                    phase = .succeeded("Received \(files.count) file(s) into \(directory.lastPathComponent)")
+                    self.phase = .succeeded("Received \(files.count) file(s) into \(directory.lastPathComponent)")
                 case .zmodem:
-                    let result = try await ZModemEngine.receive(channel: channel, write: xmodemWrite(write))
+                    let result = try await ZModemEngine.receive(channel: channel, write: self.xmodemWrite(write))
                     let url = directory.appendingPathComponent(result.name)
                     try result.data.write(to: url)
-                    phase = .succeeded("Received \(result.name) (\(result.data.count) bytes)")
+                    self.phase = .succeeded("Received \(result.name) (\(result.data.count) bytes)")
                 }
             } catch is CancellationError {
-                phase = .failed("Cancelled")
+                self?.phase = .failed("Cancelled")
             } catch {
-                phase = .failed(String(describing: error))
+                self?.phase = .failed(String(describing: error))
             }
         }
     }

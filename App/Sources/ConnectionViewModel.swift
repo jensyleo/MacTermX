@@ -62,6 +62,10 @@ final class ConnectionViewModel: ObservableObject {
     private(set) var coordinator: SessionCoordinator?
     private var subscriptions: Set<AnyCancellable> = []
     private let capture = CaptureLogger()
+    /// Redacts across chunk boundaries, not per-chunk — a secret (e.g. a
+    /// PEM key block) can be split across two separate reads from the
+    /// device; see `StreamingRedactor`'s doc comment.
+    private var streamingRedactor = StreamingRedactor()
     private var rawLog = Data()
     private static let maxRawLogBytes = 1 << 20 // 1 MiB of scrollback for the hex view
 
@@ -170,12 +174,16 @@ final class ConnectionViewModel: ObservableObject {
             try capture.start(to: url, format: captureFormat)
             captureURL = url
             lastCaptureHash = nil
+            streamingRedactor = StreamingRedactor()
         } catch {
             lastError = String(describing: error)
         }
     }
 
     func stopCapture() {
+        if redactSensitiveData {
+            capture.append(streamingRedactor.flush())
+        }
         lastCaptureHash = capture.stop()
         captureURL = nil
     }
@@ -189,7 +197,7 @@ final class ConnectionViewModel: ObservableObject {
     }
 
     private func handleRawIncoming(_ data: Data) {
-        capture.append(redactSensitiveData ? SensitiveRedactor.redact(data) : data)
+        capture.append(redactSensitiveData ? streamingRedactor.process(data) : data)
         rawLog.append(data)
         if rawLog.count > Self.maxRawLogBytes {
             rawLog.removeFirst(rawLog.count - Self.maxRawLogBytes)

@@ -102,6 +102,9 @@ public enum XModemEngine {
             }
 
             if let payload = XModemFraming.validateBlock(frame, expectedNumber: expectedNumber, useCRC: useCRC) {
+                guard result.count + payload.count <= TransferLimits.maxReceiveBytes else {
+                    throw TransferError.payloadTooLarge
+                }
                 result.append(contentsOf: payload)
                 expectedNumber = expectedNumber &+ 1
                 try await write([XModemFraming.Control.ack])

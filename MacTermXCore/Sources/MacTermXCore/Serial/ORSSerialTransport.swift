@@ -40,7 +40,7 @@ public final class ORSSerialTransport: NSObject, SerialTransport, @unchecked Sen
 
     private func observeSignals(_ port: ORSSerialPort) {
         let continuation = self.continuation
-        let handler: (ORSSerialPort, NSKeyValueObservedChange<Bool>) -> Void = { port, _ in
+        let handler: @Sendable (ORSSerialPort, NSKeyValueObservedChange<Bool>) -> Void = { port, _ in
             continuation.yield(.signals(cts: port.cts, dsr: port.dsr, dcd: port.dcd, ri: false))
         }
         signalObservations = [

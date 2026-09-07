@@ -5,6 +5,24 @@ public enum TransferError: Error, Equatable {
     case cancelled
     case tooManyRetries
     case peerCancelled
+    /// A receive grew past its safety ceiling without the sender ever
+    /// signaling end-of-transfer — guards against a malicious or
+    /// malfunctioning device streaming blocks forever and exhausting
+    /// memory. See `TransferLimits.maxReceiveBytes`.
+    case payloadTooLarge
+}
+
+/// Safety ceilings shared by the XMODEM/YMODEM/ZMODEM receive paths, all
+/// of which accumulate bytes in memory until the sender signals it's
+/// done. Untrusted/flaky serial hardware can't be trusted to ever send
+/// that signal, so every receive loop checks against this cap instead of
+/// growing without bound.
+public enum TransferLimits {
+    /// Generous enough for real firmware/config-file transfers over a
+    /// legacy serial link (which is inherently slow — nobody is pushing
+    /// gigabytes over XMODEM at 115200 baud) while still bounding worst-
+    /// case memory use from a stream that never terminates.
+    public static let maxReceiveBytes = 64 * 1024 * 1024
 }
 
 /// Feeds a transfer engine (XMODEM/YMODEM/ZMODEM) a byte stream it doesn't

@@ -109,6 +109,9 @@ public enum ZModemEngine {
             }
             while true {
                 let (payload, end) = try await readDataSubpacket(options: options, channel: channel)
+                guard result.count + payload.count <= TransferLimits.maxReceiveBytes else {
+                    throw TransferError.payloadTooLarge
+                }
                 result.append(contentsOf: payload)
                 if end == .ackRequested {
                     try await write(ZModemFraming.makeHeader(type: .zack, argument: UInt32(result.count)))
@@ -244,11 +247,13 @@ public enum ZModemEngine {
             let byte = try await channel.readByte(timeout: options.headerTimeout)
             guard byte == ZModemFraming.Control.zdle else {
                 payload.append(byte)
+                guard payload.count <= TransferLimits.maxReceiveBytes else { throw TransferError.payloadTooLarge }
                 continue
             }
             let next = try await channel.readByte(timeout: options.headerTimeout)
             guard let end = ZModemFraming.SubpacketEnd(rawValue: next) else {
                 payload.append(next ^ 0x40)
+                guard payload.count <= TransferLimits.maxReceiveBytes else { throw TransferError.payloadTooLarge }
                 continue
             }
             let crcBytes = try await readUnescapedBytes(count: 4, options: options, channel: channel)
