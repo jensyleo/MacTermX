@@ -20,6 +20,8 @@ struct PortListView: View {
                 }
             }
             .tag(device)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(accessibilityLabel(for: device)))
         }
         .overlay {
             if viewModel.ports.isEmpty {
@@ -42,5 +44,13 @@ struct PortListView: View {
                 }
             }
         }
+    }
+
+    private func accessibilityLabel(for device: SerialDevice) -> String {
+        var label = "\(device.name), \(device.path)"
+        if let vendorId = device.vendorId, let productId = device.productId {
+            label += ", vendor \(vendorId), product \(productId)"
+        }
+        return label
     }
 }

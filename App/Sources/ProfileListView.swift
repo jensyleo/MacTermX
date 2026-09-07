@@ -18,6 +18,8 @@ struct ProfileListView: View {
                     .foregroundStyle(.secondary)
             }
             .tag(profile)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("\(profile.name), \(profile.serial.baudRate) baud, \(profile.environment.rawValue)"))
             .swipeActions {
                 Button("Delete", role: .destructive) {
                     viewModel.delete(profile)
