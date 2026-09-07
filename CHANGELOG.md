@@ -2,6 +2,12 @@
 
 All notable changes to MacTermX are documented in this file.
 
+## [0.1.1] - 2026-09-07
+
+### Added — app icon
+
+Professional neón-styled app icon: neon-green X with RS-232 connector and signal indicators (PWR, TX, RX).
+
 ## [0.1.0] - 2026-09-07
 
 ### Fixed — security review findings and a real memory leak
