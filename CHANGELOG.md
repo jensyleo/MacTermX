@@ -4,6 +4,27 @@ All notable changes to MacTermX are documented in this file.
 
 ## [Unreleased]
 
+### Fixed — security review findings and a real memory leak
+
+Ran a focused security review of MacTermX's own code (not the vendored dependencies). No
+RCE-class or path-traversal-exploitable issues found — YMODEM/ZMODEM filename sanitization
+already handled `../` traversal, absolute paths, and empty names correctly; there's no
+`Process`/shell invocation anywhere; profiles and diagnostics genuinely carry no secrets. Two
+real availability/robustness gaps got fixed: XMODEM/YMODEM/ZMODEM's receive loops had no cap on
+total bytes accumulated, so a malicious or just flaky device that never signals end-of-transfer
+could grow memory unbounded until the app crashes (added `TransferLimits.maxReceiveBytes`, a
+64 MB ceiling, checked at every accumulation point including the lowest-level ZMODEM subpacket
+reader); and the sensitive-data redaction feature only ever looked at one incoming chunk at a
+time, so a secret split across two reads from the device (trivially likely for anything as long
+as a PEM private-key block) would slip through both halves unredacted — replaced with
+`StreamingRedactor`, which keeps a small bounded overlap window so a pattern spanning a chunk
+boundary still gets caught. Also found and fixed an unrelated real bug while auditing closures
+for retain cycles: `FileTransferViewModel` stored each transfer's `Task` in a property, and that
+Task's closure captured `self` strongly — every completed transfer permanently leaked one
+`FileTransferViewModel` instance. Silenced the project's one remaining compiler warning (an
+ORSSerialPort KVO handler needed an explicit `@Sendable` annotation) — Core and App both now
+build with zero warnings.
+
 ### Added — remaining backlog items from the original design doc
 
 Closed out the rest of the applicable pendientes list (GitHub publishing, the app icon, and
