@@ -72,6 +72,23 @@ AI-driven actions, cloud credential sync, a script marketplace, a custom
 USB driver, advanced modem/dial-up support, and centralized fleet
 management.
 
+## Distribution
+
+GitHub Releases, like the author's other macOS apps — a built `.app`
+attached to each tagged release, ad-hoc signed ("Sign to Run Locally",
+`CODE_SIGN_IDENTITY = "-"`) rather than through a paid Apple Developer
+account. See `docs/release-process.md` for the exact steps.
+
+Two things planned for later, once there's a public release to point at:
+
+- **A Homebrew Cask**, so `brew install --cask mactermx` becomes the
+  install path instead of downloading a zip from GitHub by hand.
+- **Developer ID signing + notarization**, once there's a paid Apple
+  Developer account to do it with — ad-hoc signing works fine for local
+  use today (see `docs/release-process.md`), but Developer ID avoids the
+  Gatekeeper "unidentified developer" prompt on first launch for anyone
+  who isn't comfortable right-clicking → Open.
+
 ## License
 
 GPL-3.0 (see `LICENSE`). Two dependencies are MIT-licensed
