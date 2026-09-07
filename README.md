@@ -77,4 +77,6 @@ management.
 GPL-3.0 (see `LICENSE`). Two dependencies are MIT-licensed
 (ORSSerialPort, SwiftTerm) — see `NOTICE.md` for why no GPL alternative
 exists for either today, and the documented plan for revisiting that if
-the situation changes.
+the situation changes. `docs/dependency-license-matrix.md` has the
+complete, flat list of every resolved package (including transitive
+ones) and its exact license.

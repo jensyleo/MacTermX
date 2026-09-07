@@ -8,7 +8,9 @@ MIT notices below must travel with any binary distribution).
 
 This file exists so that dependency choice is never silent: what's used,
 why, under what license, and whether a GPL-native replacement is
-realistic.
+realistic. For the complete, flat accounting — every resolved package
+including transitive ones, and whether each is actually linked into the
+app — see `docs/dependency-license-matrix.md`.
 
 ---
 
