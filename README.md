@@ -11,6 +11,12 @@ terminal application. It is a clean-room implementation targeting network
 engineers, OT/ICS operators, embedded developers, electronics labs, and
 legacy-device support.
 
+![Main window: live port discovery and saved profiles](Screenshots/main-window.png)
+
+![Console: connected to a real FTDI adapter, with command history and hex view](Screenshots/console.png)
+
+![Port Settings: line settings, flow control, and live signal status](Screenshots/port-settings.png)
+
 ## Status
 
 Apple Silicon, macOS 13+. `MacTermXCore` is a Swift package exposing a
