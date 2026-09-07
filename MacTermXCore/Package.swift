@@ -23,7 +23,8 @@ let package = Package(
     name: "MacTermXCore",
     platforms: [.macOS(.v13)],
     products: [
-        .library(name: "MacTermXCore", targets: ["MacTermXCore"])
+        .library(name: "MacTermXCore", targets: ["MacTermXCore"]),
+        .executable(name: "mactermx-hwtest", targets: ["mactermx-hwtest"]),
     ],
     dependencies: [
         // Serial I/O backend for SerialTransport. MIT license, macOS-native,
@@ -48,5 +49,11 @@ let package = Package(
             ]
         ),
         .testTarget(name: "MacTermXCoreTests", dependencies: ["MacTermXCore"]),
+        // A small CLI that exercises the real production code
+        // (ORSSerialTransport, SessionCoordinator, the X/Y/ZMODEM
+        // engines) against actual hardware — useful for regression
+        // testing on a real serial adapter without going through the
+        // SwiftUI app at all.
+        .executableTarget(name: "mactermx-hwtest", dependencies: ["MacTermXCore"]),
     ]
 )
