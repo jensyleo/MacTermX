@@ -10,6 +10,11 @@ struct PortSettingsView: View {
     @Binding var environment: SerialProfile.Environment
     @Binding var lineEnding: LineEnding
     @Binding var localEcho: Bool
+    @Binding var encoding: TextEncodingKind
+    @Binding var terminalType: TerminalTypeKind
+    @Binding var scrollback: Int
+    @Binding var redactSensitiveData: Bool
+    @Binding var captureFormat: CaptureFormat
     var liveSignals: (cts: Bool, dsr: Bool, dcd: Bool)?
     var manualSignals: ModemSignals
     var onManualSignalsChange: (ModemSignals) -> Void
@@ -110,10 +115,32 @@ struct PortSettingsView: View {
                 }
                 Toggle("Local Echo", isOn: $localEcho)
                     .help("Show what you type in the console, in addition to sending it to the device.")
+                Picker("Terminal Type", selection: $terminalType) {
+                    ForEach(TerminalTypeKind.allCases) { Text($0.label).tag($0) }
+                }
+                Picker("Encoding", selection: $encoding) {
+                    Text("UTF-8").tag(TextEncodingKind.utf8)
+                    Text("ASCII").tag(TextEncodingKind.ascii)
+                    Text("Latin-1").tag(TextEncodingKind.latin1)
+                }
+                Stepper("Scrollback: \(scrollback) lines", value: $scrollback, in: 100...10_000, step: 100)
+                Text("Terminal type, encoding, and scrollback take effect on the next connect.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Capture") {
+                Picker("Format", selection: $captureFormat) {
+                    Text("Plain Text").tag(CaptureFormat.plainText)
+                    Text("JSONL (timestamped)").tag(CaptureFormat.jsonl)
+                    Text("Binary (raw)").tag(CaptureFormat.binaryRaw)
+                }
+                Toggle("Redact Sensitive Patterns", isOn: $redactSensitiveData)
+                    .help("Masks recognizable secrets (passwords, API keys, bearer tokens, private key blocks) before they're written to a capture file.")
             }
         }
         .formStyle(.grouped)
-        .frame(width: 420, height: 520)
+        .frame(width: 420, height: 620)
         .safeAreaInset(edge: .bottom) {
             HStack {
                 Spacer()

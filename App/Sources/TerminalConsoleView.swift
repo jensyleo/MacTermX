@@ -5,6 +5,7 @@ struct TerminalConsoleView: View {
     @StateObject var viewModel: ConnectionViewModel
     @ObservedObject var profiles: ProfilesViewModel
     @State private var input = ""
+    @State private var historyIndex: Int?
     @State private var showingSettings = false
     @State private var viewMode: ConsoleViewMode = .text
     @State private var showingCaptureSavePanel = false
@@ -97,6 +98,10 @@ struct TerminalConsoleView: View {
             Divider()
 
             HStack {
+                Button("Previous Command", systemImage: "chevron.up") { recallHistory(offset: -1) }
+                    .disabled(viewModel.commandHistory.isEmpty)
+                Button("Next Command", systemImage: "chevron.down") { recallHistory(offset: 1) }
+                    .disabled(historyIndex == nil)
                 TextField(viewModel.sendAsHex ? "Send hex, e.g. 41 0D 0A…" : "Send text or command…", text: $input)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(send)
@@ -208,6 +213,11 @@ struct TerminalConsoleView: View {
                 environment: $viewModel.environment,
                 lineEnding: $viewModel.lineEnding,
                 localEcho: $viewModel.localEcho,
+                encoding: $viewModel.encoding,
+                terminalType: $viewModel.terminalType,
+                scrollback: $viewModel.scrollback,
+                redactSensitiveData: $viewModel.redactSensitiveData,
+                captureFormat: $viewModel.captureFormat,
                 liveSignals: viewModel.liveSignals,
                 manualSignals: viewModel.manualSignals,
                 onManualSignalsChange: { viewModel.setManualSignals($0) },
@@ -218,11 +228,19 @@ struct TerminalConsoleView: View {
             isPresented: $showingCaptureSavePanel,
             document: CaptureFilePlaceholder(),
             contentType: .plainText,
-            defaultFilename: "\(viewModel.device.name)-capture.txt"
+            defaultFilename: "\(viewModel.device.name)-capture.\(captureFileExtension)"
         ) { result in
             if case .success(let url) = result {
                 viewModel.startCapture(to: url)
             }
+        }
+    }
+
+    private var captureFileExtension: String {
+        switch viewModel.captureFormat {
+        case .plainText: return "txt"
+        case .jsonl: return "jsonl"
+        case .binaryRaw: return "bin"
         }
     }
 
@@ -301,6 +319,7 @@ struct TerminalConsoleView: View {
             Button("Capture to File…", systemImage: "record.circle") {
                 showingCaptureSavePanel = true
             }
+            .help(viewModel.lastCaptureHash.map { "Last capture SHA-256: \($0)" } ?? "")
         }
     }
 
@@ -317,10 +336,28 @@ struct TerminalConsoleView: View {
         guard !input.isEmpty else { return }
         let text = input
         input = ""
+        historyIndex = nil
         if text.contains("\n") {
             pendingMultilineSend = text
         } else {
             Task { await viewModel.send(text) }
+        }
+    }
+
+    /// Walks `viewModel.commandHistory`: `offset: -1` recalls the
+    /// previous command, `+1` moves toward the most recent (and back to
+    /// an empty field once past the newest entry).
+    private func recallHistory(offset: Int) {
+        let history = viewModel.commandHistory
+        guard !history.isEmpty else { return }
+        let newIndex = (historyIndex ?? history.count) + offset
+        guard newIndex >= 0 else { return }
+        if newIndex >= history.count {
+            historyIndex = nil
+            input = ""
+        } else {
+            historyIndex = newIndex
+            input = history[newIndex]
         }
     }
 
