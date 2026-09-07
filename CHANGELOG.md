@@ -4,6 +4,21 @@ All notable changes to MacTermX are documented in this file.
 
 ## [Unreleased]
 
+### Added — remaining backlog items from the original design doc
+
+Closed out the rest of the applicable pendientes list (GitHub publishing, the app icon, and
+real-hardware verification stay explicitly deferred): RF-005 sensitive-data redaction for
+captures (`SensitiveRedactor` — passwords, API keys, bearer tokens, PEM private-key blocks),
+`CaptureLogger` gained selectable formats (plain text / JSONL with per-chunk timestamps / raw
+binary) and writes a `.sha256` sidecar hash when a capture stops. Added an RX/TX encoding
+setting (UTF-8/ASCII/Latin-1 — transcoded into UTF-8 before reaching SwiftTerm's parser, since
+SwiftTerm itself assumes UTF-8 input), a terminal-type selector (xterm-256color/VT100/ANSI, via
+SwiftTerm's own `termName`), and a configurable scrollback buffer size. Added command history
+recall (Previous/Next Command buttons — raw arrow-key capture would need an `NSViewRepresentable`
+text field instead of a plain SwiftUI one, not worth it yet). Added `CONTRIBUTING.md`,
+`CODE_OF_CONDUCT.md`, and real screenshots in the README (captured against the actual app,
+including one session connected to a real FTDI adapter).
+
 ### Validated — first real hardware test
 
 Ran a genuine FTDI FT232R USB-serial adapter (not a simulated/mock transport) through both a new
