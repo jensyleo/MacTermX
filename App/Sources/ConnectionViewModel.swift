@@ -44,10 +44,15 @@ final class ConnectionViewModel: ObservableObject {
 
     init(device: SerialDevice, initialConfiguration: SerialConfiguration? = nil, initialEnvironment: SerialProfile.Environment = .lab) {
         self.device = device
-        if let initialConfiguration {
-            self.configuration = initialConfiguration
-        }
+        self.configuration = initialConfiguration ?? .fromPreferences()
         self.environment = initialEnvironment
+        if initialConfiguration == nil {
+            // Only apply app-wide defaults for a fresh port connection —
+            // a profile (which supplied `initialConfiguration`) already
+            // carries its own explicit line ending/echo choices elsewhere.
+            self.lineEnding = .fromPreferences()
+            self.localEcho = UserDefaults.standard.bool(forKey: AppPreferencesKeys.defaultLocalEcho)
+        }
     }
 
     func connect() async {

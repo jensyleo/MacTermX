@@ -77,13 +77,19 @@ struct ContentView: View {
             TerminalConsoleView(viewModel: active.connectionViewModel, profiles: profiles)
                 .id(active.id)
         } else if tab == .profiles, let profileSelection, profiles.matchingDevice(for: profileSelection, in: portList.ports) == nil {
-            placeholder(
-                "Device Not Connected",
-                "cable.connector.slash",
-                "Plug in \"\(profileSelection.name)\" to open this profile. It's matched by USB vendor/product ID, not by port path."
+            EmptyStateView(
+                title: "Device Not Connected",
+                systemImage: "cable.connector.slash",
+                message: "Plug in \"\(profileSelection.name)\" to open this profile. It's matched by USB vendor/product ID, not by port path.",
+                fillsAvailableSpace: true
             )
         } else {
-            placeholder("No Open Sessions", "terminal", "Choose a serial port or profile on the left to open a session. Each opens in its own tab.")
+            EmptyStateView(
+                title: "No Open Sessions",
+                systemImage: "terminal",
+                message: "Choose a serial port or profile on the left to open a session. Each opens in its own tab.",
+                fillsAvailableSpace: true
+            )
         }
     }
 
@@ -103,21 +109,6 @@ struct ContentView: View {
         )
     }
 
-    private func placeholder(_ title: String, _ systemImage: String, _ message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .font(.system(size: 32))
-                .foregroundStyle(.secondary)
-            Text(title)
-                .font(.headline)
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
 }
 
 #Preview {

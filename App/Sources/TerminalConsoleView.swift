@@ -18,6 +18,8 @@ struct TerminalConsoleView: View {
     @State private var searchQuery = ""
     @State private var showingSearch = false
     @State private var pendingMultilineSend: String?
+    @AppStorage(AppPreferencesKeys.consoleTheme) private var consoleThemeRaw = ConsoleTheme.classicGreen.rawValue
+    private var consoleTheme: ConsoleTheme { ConsoleTheme(rawValue: consoleThemeRaw) ?? .classicGreen }
 
     init(viewModel: ConnectionViewModel, profiles: ProfilesViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -75,8 +77,8 @@ struct TerminalConsoleView: View {
                     .padding(8)
                     .textSelection(.enabled)
             }
-            .background(Color.black)
-            .foregroundStyle(.green)
+            .background(consoleTheme.background)
+            .foregroundStyle(consoleTheme.foreground)
 
             if !macrosViewModel.macros.isEmpty {
                 Divider()
@@ -124,13 +126,8 @@ struct TerminalConsoleView: View {
         }
         .navigationTitle(viewModel.device.name)
         .toolbar {
-            ToolbarItem {
-                Button("Save as Profile…", systemImage: "square.and.arrow.down") {
-                    newProfileName = viewModel.device.name
-                    showingSaveProfileAlert = true
-                }
-            }
-            ToolbarItem {
+            // Session actions: things you do while talking to the device.
+            ToolbarItemGroup {
                 Button("Transfer Files…", systemImage: "arrow.up.arrow.down.circle") {
                     if let coordinator = viewModel.coordinator {
                         fileTransfer.attach(coordinator)
@@ -138,13 +135,16 @@ struct TerminalConsoleView: View {
                     }
                 }
                 .disabled(viewModel.state != .connected)
-            }
-            ToolbarItem {
                 Button("Quick Commands…", systemImage: "bolt") {
                     showingMacros = true
                 }
             }
-            ToolbarItem {
+            // Session configuration: things about how the session is set up.
+            ToolbarItemGroup {
+                Button("Save as Profile…", systemImage: "square.and.arrow.down") {
+                    newProfileName = viewModel.device.name
+                    showingSaveProfileAlert = true
+                }
                 Button("Settings", systemImage: "gearshape") {
                     showingSettings = true
                 }

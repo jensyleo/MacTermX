@@ -25,16 +25,11 @@ struct PortListView: View {
         }
         .overlay {
             if viewModel.ports.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "cable.connector.slash")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.secondary)
-                    Text("No Serial Ports")
-                        .font(.headline)
-                    Text("Connect a USB-to-serial adapter to see it here.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                EmptyStateView(
+                    title: "No Serial Ports",
+                    systemImage: "cable.connector.slash",
+                    message: "Connect a USB-to-serial adapter to see it here."
+                )
             }
         }
         .toolbar {

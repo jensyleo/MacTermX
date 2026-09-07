@@ -33,18 +33,11 @@ struct ProfileListView: View {
         }
         .overlay {
             if viewModel.profiles.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "tray")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.secondary)
-                    Text("No Saved Profiles")
-                        .font(.headline)
-                    Text("Connect to a port and save its settings as a profile.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
+                EmptyStateView(
+                    title: "No Saved Profiles",
+                    systemImage: "tray",
+                    message: "Connect to a port and save its settings as a profile."
+                )
             }
         }
         .toolbar {
