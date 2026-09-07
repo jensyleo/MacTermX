@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import SwiftTerm
 
 /// One serial session: a profile, its transport, and the terminal engine
 /// feeding off it, tracked through a single explicit state machine.
@@ -23,17 +24,26 @@ public final class SessionCoordinator: ObservableObject {
     /// and 0x11/0x13 are ordinary bytes that can legitimately appear in a
     /// binary payload — stripping them would corrupt the transfer.
     private let xonXoff: XonXoffFlowController?
+    private let encoding: TextEncodingKind
 
     /// Every received byte, before it reaches the VT100 parser — for a hex
     /// view or a capture/log file, which need the raw wire bytes rather
-    /// than SwiftTerm's interpreted screen buffer.
+    /// than SwiftTerm's interpreted screen buffer. Already transcoded to
+    /// UTF-8 per `encoding` (see `TextEncodingKind`), same as what the
+    /// parser sees.
     public var onRawIncomingData: ((Data) -> Void)?
 
-    public init(profile: SerialProfile, transport: SerialTransport) {
+    public init(
+        profile: SerialProfile,
+        transport: SerialTransport,
+        terminalOptions: TerminalOptions = .default,
+        encoding: TextEncodingKind = .utf8
+    ) {
         self.profile = profile
         self.transport = transport
+        self.encoding = encoding
         self.xonXoff = profile.serial.flowControl == .xonXoff ? XonXoffFlowController() : nil
-        self.terminal = TerminalEngine(transport: transport)
+        self.terminal = TerminalEngine(transport: transport, options: terminalOptions)
         // `terminal.snapshotLines()` isn't itself Published — forward its
         // updates as ordinary SwiftUI change notifications.
         self.terminal.onUpdate = { [weak self] in self?.objectWillChange.send() }
@@ -111,13 +121,16 @@ public final class SessionCoordinator: ObservableObject {
         case .data(let data):
             if let transferChannel {
                 transferChannel.push(data)
-            } else if let xonXoff {
-                let cleaned = await xonXoff.filterIncoming(data)
-                onRawIncomingData?(cleaned)
-                terminal.feed(cleaned)
             } else {
-                onRawIncomingData?(data)
-                terminal.feed(data)
+                let filtered: Data
+                if let xonXoff {
+                    filtered = await xonXoff.filterIncoming(data)
+                } else {
+                    filtered = data
+                }
+                let transcoded = encoding.transcodeToUTF8(filtered)
+                onRawIncomingData?(transcoded)
+                terminal.feed(transcoded)
             }
         case .signals(let cts, let dsr, let dcd, _):
             self.cts = cts
