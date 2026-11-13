@@ -2,6 +2,12 @@
 
 All notable changes to MacTermX are documented in this file.
 
+## [0.1.2] - 2026-11-13
+
+### Fixed — app icon not showing
+
+The asset catalog's AppIcon was missing the 1024×1024 @2x entry, so the icon did not compile into the app bundle. Added it.
+
 ## [0.1.1] - 2026-09-07
 
 ### Added — app icon
